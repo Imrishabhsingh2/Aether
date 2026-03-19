@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AETHER — Antigravity Image Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050508;
+  --surface: rgba(15, 15, 25, 0.4);
+  --card: rgba(20, 22, 35, 0.45);
+  --glass: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.06);
+  --text: #f0f4ff;
+  --muted: #8b95a8;
+  --accent: #a277ff;
+  --accent2: #40c9ff;
+  --accent3: #ff7eb3;
+  --radius: 28px;
+  /* Bouncy, weightless transition */
+  --tr: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  overflow-x: hidden;
+  /* Deep space background with floating orbs */
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(162, 119, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(64, 201, 255, 0.06) 0%, transparent 50%);
+}
+
+/* Antigravity Keyframes */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+@keyframes float-slow {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+@keyframes float-fast {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px); }
+}
+
+/* Glass & Levitation Utilities */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* AUTH */
+#auth { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; background:var(--bg); transition:opacity 0.8s, transform 0.8s cubic-bezier(0.22,1,0.36,1); }
+#auth.hide { opacity:0; transform:translateY(-100px) scale(0.9); pointer-events:none; }
+.abox { width:400px; max-width:90vw; border-radius:36px; padding:40px; position:relative; animation: float 6s ease-in-out infinite; }
+.alogo { text-align:center; margin-bottom:30px; animation: float-fast 4s ease-in-out infinite; }
+.alogo-icon { width:64px; height:64px; background:linear-gradient(135deg, var(--accent), var(--accent2)); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:15px; box-shadow:0 15px 30px rgba(162, 119, 255, 0.4); }
+.alogo h1 { font-size:32px; font-weight:900; letter-spacing: 2px; background:linear-gradient(135deg, #fff, var(--muted)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.atabs { display:flex; background:rgba(0,0,0,0.2); border-radius:40px; padding:5px; margin-bottom:25px; border: 1px solid var(--border); }
+.atab { flex:1; padding:12px; text-align:center; font-size:14px; font-weight:600; cursor:pointer; border-radius:35px; color:var(--muted); transition:var(--tr); border:none; background:none; font-family:'Outfit', sans-serif; }
+.atab.on { background:var(--accent); color:#fff; box-shadow:0 10px 25px rgba(162, 119, 255, 0.5); transform: translateY(-2px); }
+.aform { display:none; } .aform.on { display:block; animation: fadeUp 0.5s var(--tr); }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+.field { margin-bottom:15px; }
+.field input { width:100%; padding:14px 18px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:20px; color:var(--text); font-family:'Outfit', sans-serif; font-size:14px; outline:none; transition:var(--tr); }
+.field input:focus { border-color:var(--accent); background:rgba(162, 119, 255, 0.05); transform: translateY(-2px); box-shadow:0 10px 20px rgba(0,0,0,0.2); }
+.btn-p { width:100%; padding:16px; background:linear-gradient(135deg, var(--accent), var(--accent2)); border:none; border-radius:25px; color:#fff; font-family:'Outfit', sans-serif; font-size:16px; font-weight:700; cursor:pointer; transition:var(--tr); box-shadow:0 15px 30px rgba(162, 119, 255, 0.3); margin-top:10px; }
+.btn-p:hover { transform:translateY(-5px); box-shadow:0 20px 40px rgba(162, 119, 255, 0.5); }
+
+/* APP */
+#app { display:none; min-height:100vh; position:relative; z-index:1; flex-direction:column; }
+#app.on { display:flex; animation: fadeUp 0.8s var(--tr); }
+
+/* NAV */
+.nav { display:flex; align-items:center; justify-content:space-between; padding:15px 30px; position:sticky; top:20px; z-index:50; width: calc(100% - 40px); margin: 0 auto 20px auto; border-radius: 40px; animation: float-slow 7s ease-in-out infinite; }
+.nlogo { display:flex; align-items:center; gap:12px; font-size:22px; font-weight:900; letter-spacing: 1px; }
+.nlogo-i { width:38px; height:38px; background:linear-gradient(135deg, var(--accent), var(--accent2)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow: 0 5px 15px rgba(162,119,255,0.4); }
+.nright { display:flex; align-items:center; gap:12px; }
+.credits { display:flex; align-items:center; gap:6px; background:rgba(162,119,255,0.1); border:1px solid rgba(162,119,255,0.3); border-radius:30px; padding:8px 16px; font-size:14px; color:var(--accent); font-weight:600; }
+.btnkeys { padding:8px 16px; font-size:14px; background:rgba(64,201,255,0.1); border:1px solid rgba(64,201,255,0.3); border-radius:30px; color:var(--accent2); cursor:pointer; transition:var(--tr); font-family:'Outfit', sans-serif; font-weight:600; }
+.btnkeys:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(64,201,255,0.2); }
+.uavatar { width:40px; height:40px; background:linear-gradient(135deg, var(--accent), var(--accent3)); border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; box-shadow: 0 8px 20px rgba(255,126,179,0.4); transition:var(--tr); }
+.uavatar:hover { transform:translateY(-4px) scale(1.1); }
+
+/* MAIN GRID */
+.main { flex:1; display:grid; grid-template-columns:400px 1fr; gap:20px; padding: 0 20px 20px 20px; }
+.sidebar { border-radius:36px; padding:25px; overflow-y:auto; display:flex; flex-direction:column; gap:25px; max-height: calc(100vh - 120px); }
+.sidebar::-webkit-scrollbar { width:0px; } /* Hide scrollbar for floaty feel */
+.slabel { font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+.slabel::after { content:''; flex:1; height:1px; background:linear-gradient(90deg, var(--border), transparent); }
+
+/* INPUTS */
+.ptarea, .ntarea { width:100%; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:24px; color:var(--text); padding:18px; font-family:'Outfit', sans-serif; font-size:15px; resize:none; outline:none; transition:var(--tr); }
+.ptarea { min-height:120px; }
+.ntarea { min-height:60px; font-size:13px; color:var(--muted); }
+.ptarea:focus, .ntarea:focus { border-color:var(--accent); transform: translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+
+/* ACTIONS & TAGS */
+.pactions { display:flex; gap:10px; margin-top:10px; }
+.benhance { flex:1; padding:12px; background:linear-gradient(135deg, rgba(64,201,255,0.1), rgba(64,201,255,0.05)); border:1px solid rgba(64,201,255,0.2); border-radius:20px; color:var(--accent2); font-weight:700; cursor:pointer; font-family:'Outfit', sans-serif; transition:var(--tr); }
+.bran { padding:12px 16px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:20px; cursor:pointer; transition:var(--tr); }
+.benhance:hover, .bran:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.tagbox { display:flex; flex-wrap:wrap; gap:8px; }
+.tag { padding:6px 14px; font-size:12px; font-weight:600; background:rgba(162,119,255,0.1); border:1px solid rgba(162,119,255,0.2); border-radius:30px; color:var(--accent); cursor:pointer; transition:var(--tr); }
+.tag:hover { transform: translateY(-3px); background:var(--accent); color:#fff; box-shadow: 0 8px 15px rgba(162,119,255,0.3); }
+
+/* STYLE GRID */
+.sgrid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+.scard { padding:15px 5px; text-align:center; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:24px; cursor:pointer; transition:var(--tr); font-size:12px; font-weight:600; color:var(--muted); }
+.scard span { font-size:24px; display:block; margin-bottom:5px; transition:var(--tr); }
+.scard:hover { transform: translateY(-5px); border-color:var(--accent); color:var(--text); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.scard:hover span { transform: scale(1.2) translateY(-2px); }
+.scard.on { background:linear-gradient(135deg, rgba(162,119,255,0.2), transparent); border-color:var(--accent); color:#fff; box-shadow: 0 15px 30px rgba(162,119,255,0.15); }
+
+/* RATIO & BATCH */
+.ratios, .batchrow { display:flex; gap:8px; flex-wrap:wrap; }
+.rbtn, .bbt { flex:1; padding:10px; font-size:13px; font-weight:600; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:20px; color:var(--muted); cursor:pointer; transition:var(--tr); font-family:'Outfit', sans-serif; text-align:center; }
+.rbtn:hover, .bbt:hover { transform: translateY(-3px); color:var(--text); }
+.rbtn.on, .bbt.on { background:var(--accent2); border-color:var(--accent2); color:#000; box-shadow: 0 10px 20px rgba(64,201,255,0.3); }
+
+/* SETTINGS */
+.setrow { margin-bottom:20px; }
+.seth { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.seth span:first-child { font-size:14px; font-weight:500; }
+.sval { font-size:12px; color:#fff; background:var(--accent); padding:4px 12px; border-radius:20px; font-weight:700; box-shadow: 0 5px 15px rgba(162,119,255,0.4); }
+.slider { -webkit-appearance:none; width:100%; height:6px; background:rgba(0,0,0,0.3); border-radius:10px; outline:none; cursor:pointer; }
+.slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; box-shadow:0 0 15px var(--accent2); transition:var(--tr); }
+.slider::-webkit-slider-thumb:hover { transform:scale(1.3); }
+
+/* TOGGLES */
+.togrow { display:flex; justify-content:space-between; align-items:center; padding:5px 0; }
+.toglbl { font-size:14px; font-weight:500; } .togsub { font-size:12px; color:var(--muted); }
+.tog { position:relative; width:46px; height:26px; cursor:pointer; }
+.tog input { opacity:0; width:0; height:0; }
+.togtr { position:absolute; inset:0; background:rgba(0,0,0,0.3); border-radius:30px; transition:var(--tr); border:1px solid var(--border); }
+.tog input:checked + .togtr { background:var(--accent); border-color:var(--accent); box-shadow: 0 5px 15px rgba(162,119,255,0.4); }
+.togtr::after { content:''; position:absolute; left:4px; top:50%; transform:translateY(-50%); width:16px; height:16px; background:#fff; border-radius:50%; transition:var(--tr); }
+.tog input:checked + .togtr::after { left:24px; }
+
+/* API CARDS */
+.apigrid { display:flex; flex-direction:column; gap:10px; }
+.apicard { display:flex; align-items:center; gap:15px; padding:15px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:24px; cursor:pointer; transition:var(--tr); }
+.apicard:hover { transform: translateX(5px) translateY(-2px); border-color:rgba(255,255,255,0.2); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.apicard.on { background:rgba(162,119,255,0.1); border-color:var(--accent); box-shadow: 0 15px 30px rgba(162,119,255,0.15); }
+.apilogo { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:inset 0 2px 5px rgba(255,255,255,0.2); }
+.apiinfo { flex:1; }
+.apiname { font-size:15px; font-weight:700; }
+.apidesc { font-size:11px; color:var(--muted); margin-top:2px; }
+.apibadge { font-size:10px; font-weight:800; padding:4px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; }
+.bfree { background:rgba(64,201,255,0.15); color:var(--accent2); }
+.bkey { background:rgba(255,126,179,0.15); color:var(--accent3); }
+.hfmodels { display:none; margin-top:15px; padding-top:15px; border-top:1px dashed var(--border); }
+.hfmodels.show { display:block; animation: fadeUp 0.3s var(--tr); }
+.mchips { display:flex; gap:8px; flex-wrap:wrap; }
+.mchip { padding:6px 12px; font-size:12px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:20px; cursor:pointer; transition:var(--tr); }
+.mchip.on { background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 5px 15px rgba(162,119,255,0.3); transform:translateY(-2px); }
+
+/* GENERATE BTN */
+.bgen { width:100%; padding:20px; background:linear-gradient(135deg, var(--accent), var(--accent2)); border:none; border-radius:30px; color:#fff; font-family:'Outfit', sans-serif; font-size:18px; font-weight:900; letter-spacing:1px; cursor:pointer; transition:var(--tr); box-shadow:0 15px 35px rgba(162, 119, 255, 0.4); margin-top:10px; display:flex; align-items:center; justify-content:center; gap:10px; position: relative; overflow: hidden; }
+.bgen::before { content:''; position:absolute; top:0; left:-100%; width:50%; height:100%; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transform:skewX(-20deg); transition:0.5s; }
+.bgen:hover { transform:translateY(-5px) scale(1.02); box-shadow:0 25px 50px rgba(64, 201, 255, 0.5); }
+.bgen:hover::before { left:150%; }
+.bgen:disabled { opacity:0.6; cursor:not-allowed; transform:none; animation:none; }
+
+/* CANVAS */
+.canvas { border-radius:36px; padding:30px; display:flex; flex-direction:column; gap:25px; max-height: calc(100vh - 120px); overflow-y:auto; }
+.canvas::-webkit-scrollbar { width:0px; }
+.ogrid { display:grid; gap:25px; min-height:500px; }
+.icard { border-radius:32px; overflow:hidden; position:relative; transition:var(--tr); aspect-ratio:1; display:flex; align-items:center; justify-content:center; animation: float-slow 8s ease-in-out infinite; }
+.icard:hover { transform: translateY(-10px) scale(1.02) !important; box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 2px 10px rgba(255,255,255,0.2); }
+.icard img { width:100%; height:100%; object-fit:cover; display:block; border-radius: 32px; }
+.iph { text-align:center; color:var(--muted); padding:30px; display:flex; flex-direction:column; align-items:center; gap:15px; }
+.iph-icon { font-size:48px; opacity:0.3; animation: float-fast 3s infinite; }
+
+/* LOADING */
+.loverlay { position:absolute; inset:0; background:rgba(5,5,8,0.7); backdrop-filter:blur(10px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:15px; z-index:5; border-radius: 32px; }
+.spinner { width:60px; height:60px; border:4px solid rgba(255,255,255,0.1); border-top-color:var(--accent); border-radius:50%; animation:spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.progress-bar { height:4px; background:linear-gradient(90deg, var(--accent), var(--accent2)); width:0%; transition:width 0.4s ease; position:absolute; top:0; left:0; border-radius:4px 4px 0 0; }
+
+/* IMG ACTIONS */
+.iactions { position:absolute; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); display:flex; gap:10px; opacity:0; transition:var(--tr); z-index:10; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 30px; backdrop-filter: blur(10px); }
+.icard:hover .iactions { opacity:1; transform:translateX(-50%) translateY(0); }
+.ibtn { padding:8px 16px; font-size:13px; font-weight:700; background:rgba(255,255,255,0.1); border:none; border-radius:20px; color:#fff; cursor:pointer; transition:var(--tr); display:flex; align-items:center; gap:6px; }
+.ibtn:hover { background:var(--accent); transform:translateY(-3px); box-shadow: 0 5px 15px rgba(162,119,255,0.5); }
+
+/* HISTORY */
+.hgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:15px; margin-top:10px; }
+.hitem { aspect-ratio:1; border-radius:20px; overflow:hidden; cursor:pointer; transition:var(--tr); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+.hitem:hover { transform: translateY(-8px) scale(1.05); box-shadow: 0 15px 30px rgba(162,119,255,0.4); }
+.hitem img { width:100%; height:100%; object-fit:cover; }
+
+/* MODALS */
+.moverlay { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.6); backdrop-filter:blur(15px); display:none; align-items:center; justify-content:center; opacity:0; transition:opacity 0.4s; }
+.moverlay.open { display:flex; opacity:1; }
+.mbox { border-radius:40px; padding:40px; position:relative; max-width:500px; width:90vw; transform:translateY(50px) scale(0.9); transition:var(--tr); animation: float 6s ease-in-out infinite; }
+.moverlay.open .mbox { transform:translateY(0) scale(1); }
+.mclose { position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.1); border:none; width:40px; height:40px; border-radius:50%; color:#fff; cursor:pointer; font-size:16px; transition:var(--tr); }
+.mclose:hover { background:var(--accent3); transform:rotate(90deg); box-shadow:0 5px 15px rgba(255,126,179,0.4); }
+.mbox img { width:100%; border-radius:24px; margin:20px 0; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+.mbox h3 { font-size:24px; font-weight:800; }
+.mbox p { font-size:14px; color:var(--muted); line-height:1.6; }
+.macts { display:flex; gap:10px; margin-top:20px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:30px; right:30px; z-index:999; border-radius:30px; padding:15px 25px; display:flex; align-items:center; gap:12px; font-size:14px; font-weight:600; box-shadow:0 20px 40px rgba(0,0,0,0.5); transform:translateY(100px) scale(0.8); opacity:0; transition:var(--tr); }
+.toast.show { transform:translateY(0) scale(1); opacity:1; animation: float-fast 3s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<div id="auth">
+  <div class="abox glass">
+    <div class="alogo">
+      <div class="alogo-icon">✧</div>
+      <h1>AETHER</h1>
+      <p style="color:var(--muted); font-size:14px; margin-top:5px;">Zero-Gravity Image Studio</p>
+    </div>
+    <div class="atabs">
+      <button class="atab on" onclick="stab('login')">Initialize</button>
+      <button class="atab" onclick="stab('reg')">Create Uplink</button>
+    </div>
+    <div id="flogin" class="aform on">
+      <div class="field"><input type="email" id="le" placeholder="Pilot ID (Email)"></div>
+      <div class="field"><input type="password" id="lp" placeholder="Passcode"></div>
+      <button class="btn-p" onclick="doLogin()">Engage 🚀</button>
+    </div>
+    <div id="freg" class="aform">
+      <div class="field"><input type="text" id="rn" placeholder="Callsign (Name)"></div>
+      <div class="field"><input type="email" id="re" placeholder="Pilot ID (Email)"></div>
+      <div class="field"><input type="password" id="rp" placeholder="Passcode"></div>
+      <button class="btn-p" onclick="doReg()">Establish Connection</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <nav class="nav glass">
+    <div class="nlogo"><div class="nlogo-i">✧</div>AETHER</div>
+    <div class="nright">
+      <div class="credits">✧ <span id="cred">100</span> Energy</div>
+      <button class="btnkeys" onclick="openKeys()">🔑 API Modules</button>
+      <div class="uavatar" id="uav">A</div>
+      <button class="btnkeys" style="background:rgba(255,126,179,0.1); border-color:rgba(255,126,179,0.3); color:var(--accent3)" onclick="doLogout()">Disconnect</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <aside class="sidebar glass">
+      <div>
+        <div class="slabel">✧ Signal Prompt</div>
+        <textarea class="ptarea" id="prompt" placeholder="Transcribe your vision...&#10;e.g. Floating islands in a nebula, bioluminescent flora"></textarea>
+        <div class="pactions">
+          <button class="benhance" onclick="enhance()">✨ AI Enhance</button>
+          <button class="bran" onclick="randPrompt()" title="Randomize">🎲</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">Quick Modifiers</div>
+        <div class="tagbox">
+          <div class="tag" onclick="addTag('ethereal')">ethereal</div>
+          <div class="tag" onclick="addTag('floating')">floating</div>
+          <div class="tag" onclick="addTag('zero gravity')">zero-g</div>
+          <div class="tag" onclick="addTag('bioluminescent')">glow</div>
+          <div class="tag" onclick="addTag('cinematic lighting')">cinematic</div>
+          <div class="tag" onclick="addTag('8K resolution')">8K</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">⊘ Interference (Negative)</div>
+        <textarea class="ntarea" id="neg" placeholder="gravity, blurry, grounded, text, artifacts..."></textarea>
+      </div>
+
+      <div>
+        <div class="slabel">🎨 Dimensional Style</div>
+        <div class="sgrid">
+          <div class="scard on" onclick="selStyle(this,'Photorealistic')"><span>📸</span>Reality</div>
+          <div class="scard" onclick="selStyle(this,'Cyberpunk')"><span>🌆</span>Neon</div>
+          <div class="scard" onclick="selStyle(this,'Fantasy')"><span>🔮</span>Aura</div>
+          <div class="scard" onclick="selStyle(this,'Anime')"><span>🌸</span>Anime</div>
+          <div class="scard" onclick="selStyle(this,'Digital Art')"><span>🌌</span>Cosmic</div>
+          <div class="scard" onclick="selStyle(this,'Minimal')"><span>⚪</span>Void</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">📐 Space Ratio</div>
+        <div class="ratios">
+          <button class="rbtn on" onclick="selRatio(this,'1:1')">1:1</button>
+          <button class="rbtn" onclick="selRatio(this,'16:9')">16:9</button>
+          <button class="rbtn" onclick="selRatio(this,'9:16')">9:16</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">🌐 Core Provider</div>
+        <div class="apigrid">
+          <div class="apicard on" id="api-pollinations" onclick="selAPI('pollinations')">
+            <div class="apilogo" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">🌸</div>
+            <div class="apiinfo"><div class="apiname">Pollinations Core</div><div class="apidesc">Free · Infinite Flow</div></div>
+            <span class="apibadge bfree">Free</span>
+          </div>
+          <div class="apicard" id="api-huggingface" onclick="selAPI('huggingface')">
+            <div class="apilogo" style="background:linear-gradient(135deg,#ff9a9e,#fecfef)">🤗</div>
+            <div class="apiinfo"><div class="apiname">Hugging Face</div><div class="apidesc">Requires API Key</div></div>
+            <span class="apibadge bkey">Key</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">📦 Matrix Batch</div>
+        <div class="batchrow">
+          <button class="bbt on" onclick="selBatch(this,1)">Single</button>
+          <button class="bbt" onclick="selBatch(this,2)">Dual</button>
+          <button class="bbt" onclick="selBatch(this,4)">Quad</button>
+        </div>
+      </div>
+
+      <button class="bgen" id="genbtn" onclick="generate()">
+        <span id="gentxt">Synthesize Image</span>
+      </button>
+    </aside>
+
+    <div class="canvas glass">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2 style="font-size:28px; font-weight:900;">Observation Deck</h2>
+          <p style="color:var(--muted); font-size:14px;" id="apiinfo-bar">Routing through Pollinations Core</p>
+        </div>
+      </div>
+
+      <div class="ogrid" id="ogrid"></div>
+
+      <div id="histsec" style="margin-top: 20px;">
+        <div class="slabel" style="justify-content:space-between;">
+          <span>🕐 Temporal Log</span>
+          <button onclick="clearHist()" style="background:none;border:none;color:var(--accent3);cursor:pointer;font-weight:700;">Purge</button>
+        </div>
+        <div class="hgrid" id="hgrid"><div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:20px;">No temporal anomalies detected yet.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="moverlay" id="prevmodal">
+  <div class="mbox glass">
+    <button class="mclose" onclick="closePreview()">✕</button>
+    <h3>Captured Anomaly</h3>
+    <p id="mprompt" style="margin-top:10px;"></p>
+    <img id="mimg" src="" alt="preview">
+    <div class="macts">
+      <button class="ibtn" style="flex:1;justify-content:center;" onclick="dlModal()">⬇ Extract</button>
+      <button class="ibtn" style="flex:1;justify-content:center;" onclick="remixModal()">🔁 Re-route</button>
+    </div>
+  </div>
+</div>
+
+<div class="moverlay" id="keysmodal">
+  <div class="mbox glass">
+    <button class="mclose" onclick="closeKeys()">✕</button>
+    <h3>🔑 API Modules</h3>
+    <p style="margin-bottom:20px;">Input external keys to tap into alternative generation matrices. Stored locally.</p>
+    
+    <div style="background:rgba(0,0,0,0.2); padding:20px; border-radius:24px; border:1px solid var(--border);">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+        <span style="font-size:24px;">🤗</span>
+        <div><strong style="display:block;">Hugging Face Node</strong><span style="font-size:12px;color:var(--muted);">hf_xxxxxxxx...</span></div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <input id="k-hf" type="password" placeholder="Enter key..." style="flex:1; padding:12px; border-radius:20px; border:1px solid var(--border); background:rgba(0,0,0,0.3); color:#fff; outline:none;">
+        <button class="ibtn" onclick="saveKey('hf')">Lock In</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast glass" id="toast"><span id="ticon">✧</span><span id="tmsg">Link established!</span></div>
+
+<script>
+// ═══════════════ STATE ═══════════════
+const S = {
+  user: null, credits: 100,
+  history: [], style: 'Photorealistic', ratio: '1:1',
+  batch: 1, api: 'pollinations',
+  busy: false, modalImg: '', modalPrompt: ''
+};
+
+// ═══════════════ AUTH ═══════════════
+function stab(t) {
+  document.querySelectorAll('.atab').forEach((e,i)=>e.classList.toggle('on',(t==='login'&&i===0)||(t==='reg'&&i===1)));
+  document.getElementById('flogin').classList.toggle('on',t==='login');
+  document.getElementById('freg').classList.toggle('on',t==='reg');
+}
+function doLogin() {
+  const e=document.getElementById('le').value.trim();
+  if(!e) { toast('⚠️','Input Pilot ID'); return; }
+  S.user={name:e.split('@')[0],email:e}; launchApp();
+}
+function doReg() {
+  const n=document.getElementById('rn').value.trim();
+  if(!n) { toast('⚠️','Input Callsign'); return; }
+  S.user={name:n}; S.credits=150; launchApp();
+}
+function doLogout() {
+  document.getElementById('app').classList.remove('on');
+  setTimeout(() => {
+    document.getElementById('app').style.display='none';
+    document.getElementById('auth').classList.remove('hide');
+    S.user=null;
+  }, 500);
+}
+function launchApp() {
+  document.getElementById('auth').classList.add('hide');
+  setTimeout(()=>{
+    document.getElementById('app').style.display='flex';
+    document.getElementById('app').classList.add('on');
+    document.getElementById('uav').textContent=S.user.name[0].toUpperCase();
+    document.getElementById('cred').textContent=S.credits;
+    renderGrid(); renderHist();
+  }, 600);
+}
+
+// ═══════════════ KEYS ═══════════════
+function getKeys(){try{return JSON.parse(localStorage.getItem('aether_k')||'{}')}catch{return{}}}
+function setKey(id,v){const k=getKeys(); k[id]=v; localStorage.setItem('aether_k',JSON.stringify(k))}
+function hasKey(id){const k=getKeys();return !!(k[id]&&k[id].length>4)}
+
+function openKeys() {
+  document.getElementById('keysmodal').classList.add('open');
+  const k=getKeys(); if(k.hf) document.getElementById('k-hf').value = k.hf;
+}
+function closeKeys() { document.getElementById('keysmodal').classList.remove('open'); }
+function saveKey(id) {
+  const v = document.getElementById('k-'+id).value.trim();
+  if(!v) return; setKey(id,v); toast('✅','Node Locked!');
+}
+
+// ═══════════════ UI CONTROLS ═══════════════
+function selAPI(id) {
+  if(id==='huggingface' && !hasKey('hf')){ openKeys(); toast('🔑','Module requires key'); return; }
+  S.api = id;
+  document.querySelectorAll('.apicard').forEach(c=>c.classList.remove('on'));
+  document.getElementById('api-'+id).classList.add('on');
+  document.getElementById('apiinfo-bar').textContent = id === 'pollinations' ? 'Routing through Pollinations Core' : 'Routing through Hugging Face Node';
+  toast('✧', 'Rerouted to ' + id);
+}
+
+function selStyle(el,st) {
+  document.querySelectorAll('.scard').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); S.style=st;
+}
+function selRatio(el,r) {
+  document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on'); S.ratio=r;
+}
+function selBatch(el,n) {
+  document.querySelectorAll('.bbt').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on'); S.batch=n; renderGrid();
+}
+
+const RATIODIM={'1:1':[512,512],'16:9':[768,432],'9:16':[432,768]};
+
+function randPrompt() {
+  const p = ["Floating ancient ruins in a pink nebula, glowing crystals", "A sleek aerodynamic spaceship docking at a transparent space station", "Astronaut meditating in zero gravity, glowing aura, cinematic lighting"];
+  document.getElementById('prompt').value = p[Math.floor(Math.random()*p.length)];
+}
+function enhance() {
+  const p=document.getElementById('prompt');
+  if(!p.value) return;
+  p.value += ", floating gracefully, anti-gravity, ethereal lighting, extremely detailed, masterpiece";
+  toast('✨','Signal Enhanced');
+}
+function addTag(t) {
+  const el=document.getElementById('prompt');
+  el.value = el.value ? el.value + ', ' + t : t;
+}
+
+// ═══════════════ GENERATION ═══════════════
+function renderGrid() {
+  const g=document.getElementById('ogrid'), n=S.batch;
+  g.style.gridTemplateColumns=n===1?'1fr':'1fr 1fr';
+  g.innerHTML='';
+  for(let i=0;i<n;i++){
+    g.innerHTML += `<div class="icard glass" id="card-${i}">
+      <div class="iph"><div class="iph-icon">✧</div><p>Awaiting coordinates...</p></div>
+    </div>`;
+  }
+}
+
+async function generate() {
+  if(S.busy) return;
+  const prompt=document.getElementById('prompt').value.trim();
+  if(!prompt) { toast('⚠️','Enter coordinates (prompt)'); return; }
+  
+  S.busy=true;
+  const btn=document.getElementById('genbtn'); btn.disabled=true;
+  
+  const seed = Math.floor(Math.random()*999999);
+  const [w,h] = RATIODIM[S.ratio];
+  const fullPrompt = `${prompt}, ${S.style}`;
+
+  for(let i=0;i<S.batch;i++){
+    const c=document.getElementById('card-'+i);
+    c.innerHTML=`
+      <div class="loverlay glass">
+        <div class="progress-bar" id="pb-${i}"></div>
+        <div class="spinner"></div>
+        <div style="color:var(--text);font-weight:700;letter-spacing:1px;margin-top:10px">SYNTHESIZING...</div>
+      </div>`;
+    let w_prog = 0;
+    const iv = setInterval(() => {
+      w_prog += Math.random()*5;
+      if(w_prog>90) clearInterval(iv);
+      if(document.getElementById('pb-'+i)) document.getElementById('pb-'+i).style.width = w_prog+'%';
+    }, 500);
+  }
+
+  const jobs=[];
+  for(let i=0;i<S.batch;i++) jobs.push(genOne(i, fullPrompt, seed+i, w, h));
+  await Promise.allSettled(jobs);
+
+  S.credits-=S.batch; document.getElementById('cred').textContent=S.credits;
+  S.busy=false; btn.disabled=false;
+  toast('✧', 'Synthesis Complete!');
+}
+
+async function genOne(idx, prompt, seed, w, h) {
+  const card=document.getElementById('card-'+idx);
+  let imgUrl='';
+
+  try {
+    if(S.api==='pollinations') {
+      imgUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true`;
+      await new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => res(); img.onerror = () => rej();
+        img.src = imgUrl;
+      });
+    } else if(S.api==='huggingface') {
+      const resp=await fetch(`https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0`,{
+        method:'POST', headers:{'Authorization':'Bearer '+getKeys().hf,'Content-Type':'application/json'},
+        body:JSON.stringify({inputs:prompt, parameters:{width:w, height:h}})
+      });
+      if(!resp.ok) throw new Error();
+      imgUrl = URL.createObjectURL(await resp.blob());
+    }
+  } catch(e) {
+    card.innerHTML=`<div class="iph" style="color:#ff7eb3"><div class="iph-icon">⚠️</div><p>Interference detected. Synthesis failed.</p></div>`;
+    return;
+  }
+
+  const safe = imgUrl.replace(/'/g,"\\'");
+  const sp = prompt.replace(/'/g,"\\'").substring(0,100);
+  card.innerHTML=`
+    <img src="${imgUrl}" alt="synthesized">
+    <div class="iactions glass">
+      <button class="ibtn" onclick="openPreview('${safe}','${sp}')">🔍 Inspect</button>
+      <button class="ibtn" onclick="dlImg('${safe}','aether_${seed}')">⬇ Extract</button>
+    </div>`;
+  addHist(imgUrl, prompt);
+}
+
+// ═══════════════ HISTORY & MODALS ═══════════════
+function addHist(url,prompt) {
+  S.history.unshift({url,prompt});
+  if(S.history.length>12) S.history.pop();
+  renderHist();
+}
+function renderHist() {
+  const g=document.getElementById('hgrid');
+  if(!S.history.length) return;
+  g.innerHTML = S.history.map(x => `<div class="hitem glass" onclick="openPreview('${x.url.replace(/'/g,"\\'")}','')"><img src="${x.url}"></div>`).join('');
+}
+function clearHist() { S.history=[]; document.getElementById('hgrid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:20px;">Logs purged.</div>'; }
+
+function openPreview(url,prompt) {
+  S.modalImg=url; S.modalPrompt=prompt;
+  document.getElementById('mimg').src=url;
+  document.getElementById('mprompt').textContent=prompt;
+  document.getElementById('prevmodal').classList.add('open');
+}
+function closePreview() { document.getElementById('prevmodal').classList.remove('open'); }
+function dlModal() { dlImg(S.modalImg, 'aether_anomaly'); }
+function remixModal() { document.getElementById('prompt').value=S.modalPrompt; closePreview(); }
+
+function dlImg(url,name) {
+  const a=document.createElement('a'); a.href=url; a.download=name+'.jpg'; a.target='_blank'; a.click();
+}
+
+let ttimer;
+function toast(icon,msg) {
+  const t=document.getElementById('toast');
+  document.getElementById('ticon').textContent=icon; document.getElementById('tmsg').textContent=msg;
+  t.classList.add('show');
+  clearTimeout(ttimer); ttimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
